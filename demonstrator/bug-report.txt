@@ -1,0 +1,139 @@
+Bug report
+
+Synopsis:
+EPollArrayWrapper.epollWait() may return events for removed file descriptors
+
+Description:
+------------
+
+On Ubuntu 64 systems, EPollArrayWrapper.epollWait() may return events for removed file descriptors .
+
+The consequences are that Jetty spins into infinite loops and consumes CPU core at 100% definitively for nothing. The only way to recover is to restart the application.
+
+We make an Eclipse RCP application whose help system is based on a local embedded Jetty server. The help is displayed in a SWT Browser based on Webkit GTK widget.
+Since SWT forced the usage of version 2 Webkit for the SWT Browser implementation we experience very often many CPU cores are at 100% indefinitively. Then only way to stop this is then to restart the application. This is a major inconvenience for our Linux users.
+
+One week of debugging let me conclude that when the Jetty server closes an HTTP connection for being idle, it:
+1) closes the connection,
+2) removes the connection for the Selector
+3) listen on the selector again
+4) receive an event from the removed connection !!!
+
+Here is a stacktrace where I paused the debugger, with some variables dumped:
+
+Thread [qtp2141257835-54] (Suspended)	
+	owns: EPollSelectorImpl  (id=129)	
+	owns: Collections$UnmodifiableSet<E>  (id=130)	
+	owns: Util$3  (id=131)	
+	EPollArrayWrapper.poll(long) line: 270	
+	EPollSelectorImpl.doSelect(long) line: 93	
+	EPollSelectorImpl(SelectorImpl).lockAndDoSelect(long) line: 86	
+	EPollSelectorImpl(SelectorImpl).select(long) line: 97	
+	EPollSelectorImpl(SelectorImpl).select() line: 101	
+	ManagedSelector$SelectorProducer.select() line: 466	
+	ManagedSelector$SelectorProducer.produce() line: 403	
+	EatWhatYouKill.produceTask() line: 357	
+	EatWhatYouKill.doProduce(boolean) line: 181	
+	EatWhatYouKill.tryProduce(boolean) line: 168	
+	EatWhatYouKill.run() line: 126	
+	ReservedThreadExecutor$ReservedThread.run() line: 366	
+	QueuedThreadPool.runJob(Runnable) line: 765	
+	QueuedThreadPool$2.run() line: 683	
+	Thread.run() line: 748	
+
+this	EPollArrayWrapper  (id=429)	
+	- epfd	128	
+	- incomingInterruptFD	77	
+	- outgoingInterruptFD	127	
+	- registered	BitSet  (id=435)	{184}
+	- updated	1	
+	- updateDescriptors	(id=436)	[184, 0, 0, 0, ...
+	- eventsLow	(id=433)	
+			[150]	-1	
+			[184]	1	
+
+getDescriptor(0) returned	150	
+
+This bug might be the cause of the following forum posts:
+- https://forum.flashphoner.com/threads/100-cpu-usage-from-netty-epoll.11390/
+- https://www.eclipse.org/lists//jetty-users/msg07075.html
+- https://stackoverflow.com/questions/25494752/high-cpu-utilization-for-threads-that-seem-to-be-waiting
+- https://stackoverflow.com/questions/20475290/why-does-select-consume-so-much-cpu-time-in-my-program
+- https://download.oracle.com/javaee-archive/grizzly.java.net/users/2015/09/6747.html
+- https://github.com/eclipse/jetty.project/issues/1323
+- http://jetty.4.x6.nabble.com/jetty-users-high-cpu-load-NIO-Jetty7-6-0-td4548266.html
+
+
+System / OS / Java Runtime Information 
+--------------------------------------
+
+Dell Precision Tower with :
+- Intel(R) Xeon(R) CPU E5-1630 v4 @ 3.70GHz
+- 32 Go RAM
+
+Java: reproduced on all of these:
+- 1.8.0_201-b09 HotSpot(TM) 64-Bit Server VM (build 25.201-b09, mixed mode)
+- 1.8.0_172-b11
+- openjdk-8-jdk 8u232-b09-0ubuntu1.1
+
+OS:
+  Distribution: Ubuntu 64 19.10 
+  C Library: GNU C Library / (Ubuntu GLIBC 2.30-0ubuntu2) 2.30
+  Kernel		: Linux 5.3.0-26-generic (x86_64)
+  
+  
+  
+Steps to Reproduce
+------------------
+
+I have a runnable jar file to reproduce the problem. 
+It embeds a Jetty server, Eclipse SWT and code to reproduce the problem.
+
+It is stored here : https://github.com/cedric780/EPollArrayWrapper-bug-demonstrator/blob/master/org.modelio.jre.epollarray.test-0.0.1-sources.jar
+
+Expected Result
+---------------
+
+The jar should consume few CPU time.
+
+
+Actual Result
+---------------
+At least one CPU core is at 100% indefinitively.
+
+
+Source code for an executable test case
+----------------------------------------
+
+See here:
+https://github.com/cedric780/EPollArrayWrapper-bug-demonstrator/blob/master/org.modelio.jre.epollarray.test-0.0.1-sources.jar
+
+https://github.com/cedric780/EPollArrayWrapper-bug-demonstrator
+
+
+Workaround
+----------
+
+I have written a java agent that patches EPollArrayWrapper .
+It is in the same repository:
+https://github.com/cedric780/EPollArrayWrapper-bug-demonstrator/blob/master/org.modelio.jre.epollarray.patch-0.0.1-sources.jar
+
+
+Oracle Report ID:
+----------
+
+9063461
+
+forgotten links:
+-----------------
+- https://bz.apache.org/bugzilla/show_bug.cgi?id=63802
+- https://idea.popcount.org/2017-03-20-epoll-is-fundamentally-broken-22/
+
+  This link explains a possible cause of the bug.
+  
+
+
+
+
+
+

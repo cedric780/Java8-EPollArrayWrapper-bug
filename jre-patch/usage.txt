@@ -1,0 +1,3 @@
+Add the following params to modelio / eclipse command line:
+
+--launcher.appendVmargs -vmargs -Dorg.eclipse.equinox.http.jetty.log.stderr.threshold=debug -javaagent:/...../target/org.modelio.jre.epollarray.patch-0.0.1.jar
