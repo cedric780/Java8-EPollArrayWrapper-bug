@@ -6,12 +6,12 @@ These maven projects demonstrate that sun.nio.ch.EPollArrayWrapper bug where EPo
 The consequences are that Jetty spins into infinite loops and consumes CPU for nothing.
 
 This repository contains 2 projects:
-- one to reproduce the bug
-- the other is a java agent that patches the EPollArrayWrapper JDK class to fix the issue
+- **demonstrator** : reproduces the bug
+- **jre-patch** : this is a java agent that patches the EPollArrayWrapper JDK class to fix the issue
 
-## How to execute:
+## How to execute the demonstator:
 
-1. Extract the jar file in a directory
-1. Go to the directory
+1. Clone or download the repository
+1. Go to the `demonstrator` directory
 1. Execute `maven package`
 1. Execute `java -jar './target/org.modelio.jre.epollarray.test-0.0.1-jar-with-dependencies.jar`
