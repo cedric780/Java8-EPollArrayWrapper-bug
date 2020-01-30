@@ -49,6 +49,9 @@
 				<directory>${project.basedir}</directory>
 				<includes><include>README.txt</include></includes>
 			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
 		</resources>
 		<plugins>
 			<plugin>
