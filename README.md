@@ -22,6 +22,20 @@ This repository contains 2 projects:
 1. Execute `maven package`
 1. Execute `java -jar './target/org.modelio.jre.epollarray.test-0.0.1-jar-with-dependencies.jar`
 
+## How to test the patch
+
+**Warn: This patch has only been quickly tested, I make absolutly no guaranty !**  
+> Under no circumstances will myself nor Modeliosoft be held liable for any damage 
+> whatsoever resulting from the use or performance of this software.  
+
+It also dumps some debug logs directly to System.out.
+
+1. Clone or download the repository
+1. Go to the `demonstrator` directory
+1. Execute `maven package`
+1. Add the following parameter to you JVM command line:
+   `-javaagent:.....demonstrator/target/org.modelio.jre.epollarray.patch-0.0.1.jar `
+
 
 ## Possibly related issues
 
