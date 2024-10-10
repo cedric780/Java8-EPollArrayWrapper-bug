@@ -1,4 +1,7 @@
-# EPollArrayWrapper.epollWait(...) issue
+# Java 8 EPollArrayWrapper.epollWait(...) issue
+
+> [!NOTE]
+> This repository demonstrate a Java 8 bug that was fixed in Java >= 11 .
 
 These maven projects demonstrate that `sun.nio.ch.EPollArrayWrapper` bug where `EPollArrayWrapper.epollWait(...)`
  may return events for file descriptors that were previously removed.
